@@ -47,60 +47,43 @@ services:
       retries: 3
       start_period: 40s
 
-  # Zookeeper (Required for Kafka - Local fallback only)
-  zookeeper:
-    image: confluentinc/cp-zookeeper:7.4.0
-    container_name: lawrose-zookeeper
-    restart: unless-stopped
-    environment:
-      ZOOKEEPER_CLIENT_PORT: 2181
-      ZOOKEEPER_TICK_TIME: 2000
-      ZOOKEEPER_SYNC_LIMIT: 2
-    volumes:
-      - zookeeper_data:/var/lib/zookeeper/data
-      - zookeeper_logs:/var/lib/zookeeper/log
-    networks:
-      - lawrose-network
-    healthcheck:
-      test: ["CMD", "nc", "-vz", "localhost", "2181"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    profiles:
-      - local-kafka
-
-  # Apache Kafka (Local fallback only)
+  # Apache Kafka with Bitnami (KRaft mode - no Zookeeper needed)
   kafka:
-    image: confluentinc/cp-kafka:7.4.0
+    image: bitnami/kafka:3.4.0-debian-11-r30
     container_name: lawrose-kafka
     restart: unless-stopped
     ports:
       - "9092:9092"
       - "9093:9093"
     environment:
-      KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9093
-      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'true'
-      KAFKA_DELETE_TOPIC_ENABLE: 'true'
-      KAFKA_LOG_RETENTION_HOURS: 168
-      KAFKA_LOG_SEGMENT_BYTES: 1073741824
-      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 300000
+      # KRaft settings (replaces Zookeeper)
+      KAFKA_ENABLE_KRAFT: "yes"
+      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
+      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
+      KAFKA_CFG_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@127.0.0.1:9093"
+      KAFKA_CFG_NODE_ID: "1"
+      KAFKA_KRAFT_CLUSTER_ID: "lawroseclusterabcdefghij"
+      # General Kafka settings (preserved from your original config)
+      KAFKA_BROKER_ID: "1"
+      ALLOW_PLAINTEXT_LISTENER: "yes"
+      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
+      KAFKA_CFG_DELETE_TOPIC_ENABLE: "true"
+      KAFKA_CFG_LOG_RETENTION_HOURS: "168"
+      KAFKA_CFG_LOG_SEGMENT_BYTES: "1073741824"
+      KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_MS: "300000"
+      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
+      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
+      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
     volumes:
-      - kafka_data:/var/lib/kafka/data
-    depends_on:
-      zookeeper:
-        condition: service_healthy
+      - kafka_data:/bitnami/kafka
     networks:
       - lawrose-network
     healthcheck:
-      test: ["CMD-SHELL", "kafka-broker-api-versions --bootstrap-server localhost:9092"]
+      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
       interval: 10s
       timeout: 10s
       retries: 5
@@ -118,7 +101,7 @@ services:
     environment:
       KAFKA_CLUSTERS_0_NAME: local
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      KAFKA_CLUSTERS_0_ZOOKEEPER: zookeeper:2181
+      # Note: No Zookeeper configuration needed with KRaft
     depends_on:
       kafka:
         condition: service_healthy
@@ -136,7 +119,4 @@ networks:
 volumes:
   kafka_data:
     name: lawrose_kafka_data
-  zookeeper_data:
-    name: lawrose_zookeeper_data
-  zookeeper_logs:
-    name: lawrose_zookeeper_logs
+  # Removed Zookeeper volumes as they're no longer needed
