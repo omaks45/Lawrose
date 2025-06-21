@@ -10,22 +10,27 @@ services:
     container_name: lawrose-user-service
     restart: unless-stopped
     ports:
-      - "${PORT:-5000}:${PORT:-5000}"
+      - "${PORT:-5000}:5000"
     env_file:
       - .env
     environment:
-      # Your actual environment variables
-      - NODE_ENV=development
-      - PORT=${PORT:-5000}
+      # Application environment
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=5000
+      # Database connections
       - MONGO_URL=${MONGO_URL}
       - REDIS_URL=${REDIS_URL}
+      # Authentication
       - JWT_SECRET=${JWT_SECRET}
+      # Email configuration
       - EMAIL_PASS=${EMAIL_PASS}
       - EMAIL_SERVICE=${EMAIL_SERVICE:-gmail}
       - EMAIL_USER=${EMAIL_USER}
+      # Cloudinary configuration
       - CLOUDINARY_NAME=${CLOUDINARY_NAME}
       - CLOUDINARY_KEY=${CLOUDINARY_KEY}
       - CLOUDINARY_SECRET=${CLOUDINARY_SECRET}
+      # Kafka configuration
       - KAFKA_BROKERS=${KAFKA_BROKERS:-kafka:9092}
       - KAFKA_CLIENT_ID=${KAFKA_CLIENT_ID:-LawUser}
       - KAFKA_GROUP_ID=${KAFKA_GROUP_ID:-LawUser-group}
@@ -41,13 +46,13 @@ services:
     volumes:
       - ./logs:/app/logs
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:${PORT:-5000}/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
+      start_period: 60s
 
-  # Apache Kafka with Bitnami (KRaft mode - no Zookeeper needed)
+  # Apache Kafka with Bitnami (KRaft mode)
   kafka:
     image: bitnami/kafka:3.4.0-debian-11-r30
     container_name: lawrose-kafka
@@ -57,39 +62,37 @@ services:
       - "9093:9093"
     environment:
       # KRaft settings (replaces Zookeeper)
-      KAFKA_ENABLE_KRAFT: "yes"
-      KAFKA_CFG_PROCESS_ROLES: "broker,controller"
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_LISTENERS: "PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093"
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT"
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "1@127.0.0.1:9093"
-      KAFKA_CFG_NODE_ID: "1"
-      KAFKA_KRAFT_CLUSTER_ID: "lawroseclusterabcdefghij"
-      # General Kafka settings (preserved from your original config)
-      KAFKA_BROKER_ID: "1"
-      ALLOW_PLAINTEXT_LISTENER: "yes"
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_CFG_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_CFG_LOG_RETENTION_HOURS: "168"
-      KAFKA_CFG_LOG_SEGMENT_BYTES: "1073741824"
-      KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_MS: "300000"
-      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS: "0"
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093
+      - KAFKA_CFG_NODE_ID=1
+      - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+      # General Kafka settings
+      - KAFKA_BROKER_ID=1
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+      - KAFKA_CFG_DELETE_TOPIC_ENABLE=true
+      - KAFKA_CFG_LOG_RETENTION_HOURS=168
+      - KAFKA_CFG_LOG_SEGMENT_BYTES=1073741824
+      - KAFKA_CFG_LOG_RETENTION_CHECK_INTERVAL_MS=300000
+      - KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS=0
     volumes:
       - kafka_data:/bitnami/kafka
     networks:
       - lawrose-network
     healthcheck:
       test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list"]
-      interval: 10s
+      interval: 15s
       timeout: 10s
-      retries: 5
-      start_period: 30s
-    profiles:
-      - local-kafka
+      retries: 10
+      start_period: 60s
 
   # Development Tools (Optional)
   kafka-ui:
@@ -99,9 +102,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      KAFKA_CLUSTERS_0_NAME: local
-      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
-      # Note: No Zookeeper configuration needed with KRaft
+      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
     depends_on:
       kafka:
         condition: service_healthy
@@ -109,7 +111,6 @@ services:
       - lawrose-network
     profiles:
       - dev
-      - local-kafka
 
 networks:
   lawrose-network:
@@ -119,4 +120,3 @@ networks:
 volumes:
   kafka_data:
     name: lawrose_kafka_data
-  # Removed Zookeeper volumes as they're no longer needed
