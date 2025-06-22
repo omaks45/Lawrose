@@ -1,6 +1,6 @@
 /* eslint-disable prettier/prettier */
 import { Controller, Get } from '@nestjs/common';
-import { ConnectionService } from './connection.service';
+import { ConnectionService } from './connections.service';
 import { ConfigService } from '@nestjs/config';
 
 @Controller('health')

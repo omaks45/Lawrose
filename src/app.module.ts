@@ -3,7 +3,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
-import { ConnectionModule } from './common/connection/connection.module';
+import { ConnectionModule } from './common/connections/connections.module';
 
 import databaseConfig from './config/database.config';
 import kafkaConfig from './config/kafka.config';

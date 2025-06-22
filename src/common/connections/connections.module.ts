@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 // src/common/connection/connection.module.ts
 import { Module } from '@nestjs/common';
-import { ConnectionService } from './connection.service';
+import { ConnectionService } from './connections.service';
 import { MongooseModule } from '@nestjs/mongoose';
 
 @Module({
