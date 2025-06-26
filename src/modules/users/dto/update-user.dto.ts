@@ -7,6 +7,9 @@ import { ApiProperty } from '@nestjs/swagger';
 export class UpdateUserDto extends PartialType(
   OmitType(CreateUserDto, ['email'] as const)
 ) {
+  id() {
+    throw new Error('Method not implemented.');
+  }
   @ApiProperty({
     description: 'User active status',
     example: true,

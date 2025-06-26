@@ -4,6 +4,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConnectionModule } from './common/connections/connections.module';
+import { AuthModule } from './modules/auth/auth.module';
+import { ShippingModule } from './modules/shipping/shipping.module';
+import { AddressesModule } from './modules/addresses/addresses.module';
 
 import databaseConfig from './config/database.config';
 import kafkaConfig from './config/kafka.config';
@@ -18,8 +21,10 @@ import emailConfig from './config/email.config';
       isGlobal: true,
     }),
     MongooseModule.forRoot(process.env.MONGO_URL),
-    ConnectionModule, //
-    // ... other modules
+    ConnectionModule,
+    AuthModule,
+    ShippingModule,
+    AddressesModule,
   ],
 })
 export class AppModule {}

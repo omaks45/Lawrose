@@ -1,6 +1,7 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateShippingDto } from './calculate-shipping.dto';
+/* eslint-disable prettier/prettier */
+//import { PartialType } from '@nestjs/mapped-types';
+//import { CreateShippingDto } from './calculate-shipping.dto';
 
-export class UpdateShippingDto extends PartialType(CreateShippingDto) {
-  id: number;
-}
+//export class UpdateShippingDto extends PartialType(CreateShippingDto) {
+  //id: number;
+//}

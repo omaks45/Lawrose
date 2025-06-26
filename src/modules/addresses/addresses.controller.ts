@@ -1,8 +1,9 @@
+/* eslint-disable prettier/prettier */
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { AddressesService } from './addresses.service';
 import { CreateAddressDto } from './dto/create-address.dto';
-import { UpdateAddressDto } from './dto/shipping-address.dto';
+//import { UpdateAddressDto } from './dto/shipping-address.dto';
 
 @Controller()
 export class AddressesController {
@@ -23,10 +24,7 @@ export class AddressesController {
     return this.addressesService.findOne(id);
   }
 
-  @MessagePattern('updateAddress')
-  update(@Payload() updateAddressDto: UpdateAddressDto) {
-    return this.addressesService.update(updateAddressDto.id, updateAddressDto);
-  }
+ 
 
   @MessagePattern('removeAddress')
   remove(@Payload() id: number) {

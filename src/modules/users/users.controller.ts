@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Controller } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { UsersService } from './users.service';
@@ -24,8 +25,8 @@ export class UsersController {
   }
 
   @MessagePattern('updateUser')
-  update(@Payload() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(updateUserDto.id, updateUserDto);
+  update(@Payload() payload: { id: number; updateUserDto: UpdateUserDto }) {
+    return this.usersService.update(payload.id, payload.updateUserDto);
   }
 
   @MessagePattern('removeUser')

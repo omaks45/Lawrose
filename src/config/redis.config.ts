@@ -11,9 +11,8 @@ export default registerAs('redis', () => {
       host: url.hostname,
       port: parseInt(url.port) || 6379,
       password: url.password,
-      username: url.username || 'default',
+      username: url.username || undefined,
       db: 0,
-      retryDelayOnFailover: 100,
       enableReadyCheck: true,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
@@ -22,8 +21,6 @@ export default registerAs('redis', () => {
       keyPrefix: 'lawrose:user:',
       connectTimeout: 10000,
       commandTimeout: 5000,
-      retryDelayOnClusterDown: 300,
-      retryDelayOnReplication: 100,
       showFriendlyErrorStack: process.env.NODE_ENV === 'development',
     };
   }
@@ -32,9 +29,9 @@ export default registerAs('redis', () => {
   return {
     host: process.env.REDIS_HOST || 'localhost',
     port: parseInt(process.env.REDIS_PORT) || 6379,
-    password: process.env.REDIS_PASSWORD,
+    password: process.env.REDIS_PASSWORD || undefined,
+    username: process.env.REDIS_USERNAME || undefined,
     db: 0,
-    retryDelayOnFailover: 100,
     enableReadyCheck: true,
     maxRetriesPerRequest: 3,
     lazyConnect: true,
