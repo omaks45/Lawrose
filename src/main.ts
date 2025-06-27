@@ -22,7 +22,7 @@ async function bootstrap() {
 
     // Enable CORS for cross-origin requests
     app.enableCors({
-      origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'],
+      origin: process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3001'],
       methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'x-correlation-id'],
       credentials: true,

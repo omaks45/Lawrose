@@ -10,7 +10,7 @@ services:
     container_name: lawrose-user-service
     restart: unless-stopped
     ports:
-      - "${PORT:-5000}:5000"
+      - "3001:5000"  # Host port 3001 maps to container port 5000
     env_file:
       - .env
     environment:
@@ -54,12 +54,12 @@ services:
 
   # Apache Kafka with Bitnami (KRaft mode)
   kafka:
-    image: bitnami/kafka:3.4.0-debian-11-r30
+    image: bitnami/kafka:3.6.0  # Updated to newer stable version
     container_name: lawrose-kafka
     restart: unless-stopped
     ports:
-      - "9092:9092"
-      - "9093:9093"
+      - "9092:9092"  # External access
+      - "9093:9093"  # Controller port
     environment:
       # KRaft settings (replaces Zookeeper)
       - KAFKA_ENABLE_KRAFT=yes
@@ -67,8 +67,8 @@ services:
       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
-      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@127.0.0.1:9093
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092  # For internal Docker communication
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093  # Fixed to use kafka hostname
       - KAFKA_CFG_NODE_ID=1
       - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
       # General Kafka settings
@@ -83,6 +83,12 @@ services:
       - KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR=1
       - KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
       - KAFKA_CFG_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+      # Performance optimizations
+      - KAFKA_CFG_NUM_NETWORK_THREADS=8
+      - KAFKA_CFG_NUM_IO_THREADS=8
+      - KAFKA_CFG_SOCKET_SEND_BUFFER_BYTES=102400
+      - KAFKA_CFG_SOCKET_RECEIVE_BUFFER_BYTES=102400
+      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=104857600
     volumes:
       - kafka_data:/bitnami/kafka
     networks:
@@ -94,7 +100,7 @@ services:
       retries: 10
       start_period: 60s
 
-  # Development Tools (Optional)
+  # Development Tools (Optional - only runs with dev profile)
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
     container_name: lawrose-kafka-ui
@@ -102,8 +108,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - KAFKA_CLUSTERS_0_NAME=local
+      - KAFKA_CLUSTERS_0_NAME=lawrose-local
       - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9092
+      - DYNAMIC_CONFIG_ENABLED=true
+      - LOGGING_LEVEL_ROOT=INFO
     depends_on:
       kafka:
         condition: service_healthy
@@ -111,12 +119,22 @@ services:
       - lawrose-network
     profiles:
       - dev
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 networks:
   lawrose-network:
     driver: bridge
     name: lawrose-network
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
 
 volumes:
   kafka_data:
     name: lawrose_kafka_data
+    driver: local
