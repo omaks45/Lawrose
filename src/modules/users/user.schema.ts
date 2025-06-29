@@ -113,6 +113,7 @@ export class User {
 
   @Prop()
   updatedAt?: Date;
+  id: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
