@@ -19,6 +19,9 @@ export type UserDocument = User & Document;
   }
 })
 export class User {
+  static find() {
+    throw new Error('Method not implemented.');
+  }
   @Prop({ 
     required: true, 
     unique: true, 

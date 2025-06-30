@@ -22,6 +22,15 @@ export class UpdateUserDto extends PartialType(
   @IsEmail()
   email?: string;
 
+  
+  @ApiProperty({
+    description: 'Email verification timestamp',
+    example: '2023-12-01T12:00:00Z',
+    required: false,
+  })
+  @IsOptional()
+  emailVerifiedAt?: Date;
+
   @IsOptional()
   @IsBoolean({ message: 'Active status must be a boolean' })
   isActive?: boolean;
