@@ -4,6 +4,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { ConnectionModule } from './common/connections/connections.module';
+import { UsersModule } from './modules/users/users.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { ShippingModule } from './modules/shipping/shipping.module';
 import { AddressesModule } from './modules/addresses/addresses.module';
@@ -22,6 +23,7 @@ import emailConfig from './config/email.config';
     }),
     MongooseModule.forRoot(process.env.MONGO_URL),
     ConnectionModule,
+    UsersModule,
     AuthModule,
     ShippingModule,
     AddressesModule,

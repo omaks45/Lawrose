@@ -6,6 +6,7 @@ import { Address, AddressSchema } from './address.schema';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 import { UsersRepository } from './repository/user.repository';
+import { UsersKafkaController } from './users-kafka.controller';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { UsersRepository } from './repository/user.repository';
       { name: Address.name, schema: AddressSchema }
     ])
   ],
-  controllers: [UsersController],
+  controllers: [UsersController, UsersKafkaController],
   providers: [
     UsersService,
     UsersRepository
